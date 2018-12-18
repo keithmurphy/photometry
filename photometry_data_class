@@ -23,7 +23,7 @@ class Photometry:
         # series of F for now
 
     def get_sampling_rate():
-
+        
         return self.sampling_rate
 
     
@@ -38,26 +38,38 @@ class Photometry:
             m,b = np.polyfit(x,y,1)
             detrend_data = []
             for x in range(len(self.data)):
-                detrend_data.append(self.data[x] - m*x+b)
-    
+                detrend_data.append(self.data[x] - ((m*x)+b))
+            self.data = detrend_data
+            
         if type == 'exponential':
+            
             print('filter type not installed')
             pass
         
         return detrend_data
 
-    def deltaF():
-        pass
+    def deltaF(self):
+        base_val = sum(self.data[self.base_start:self.base_end]) / len(self.data[self.base_start:self.base_end])
+        delta_data = []
+        for i in range(len(self.data)):
+            delta_data.append(self.data[i] / base_val)
+        self.data = delta_data
+        return delta_data
 
     def avg_bins(self,bin_size):
         #this will scan data and create interval bins, taking the average of each bin
         bins = []
         for i in range(0,len(self.data),bin_size):
             try:
-                bins.append(sum(self.data[i:i+bin_size])/len(bin_size))
+                bins.append(sum(self.data[i:i+bin_size])/bin_size)
             except:
                 bins.append('')
+        self.data = bins
         return bins
+
+    def plot_data(self):
+        plt.plot(np.linspace(0,len(self.data),len(self.data)),self.data)
+        plt.show()
 
 def import_mat_file(file_name):
 
@@ -66,6 +78,7 @@ def import_mat_file(file_name):
     data = transpose(data['data'])
     data = data[0]
     data = [round(i,2) for i in data]                                                                
+
     return data
 
 def transpose(matrix):
@@ -86,14 +99,16 @@ def transpose(matrix):
         longList.append(shortList)
     return longList
 
-import Photomerty
-hyp = Photom
+def main():
 
-data = import_mat_file("C:\\Users\\Keith\\Desktop\\tes.mat")
-test = Photometry("C:\\Users\\Keith\\Desktop\\tes.mat",100,0,12000)
-det  = test.detrend('linear')
+    test = Photometry("C:\\Users\\Keith\\Desktop\\tes.mat",100,0,12000)
+    test.plot_data()
+    test.detrend('linear')
+    test.plot_data()
+    test.avg_bins(100)
+    test.plot_data()
+    test.deltaF()
+    test.plot_data()
 
-plt.plot(np.linspace(0,len(det),len(det)),det, 'ro')
-plt.show()
-plt.plot(np.linspace(0,len(data),len(data)),data, 'ro')
-plt.show()
+if __name__ == "__main__":
+    main()
